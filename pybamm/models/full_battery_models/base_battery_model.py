@@ -1245,6 +1245,7 @@ class BaseBatteryModel(pybamm.BaseModel):
         # Need to compare OCV to initial value to capture this as an overpotential
         ocv_init = self.param.ocv_init
         eta_ocv = ocv_bulk - ocv_init
+        eta_ocv_surf = ocv_surf - ocv_init
         # Current collector current density for working out euiqvalent resistance
         # based on Ohm's Law
         i_cc = self.variables["Current collector current density [A.m-2]"]
@@ -1262,7 +1263,8 @@ class BaseBatteryModel(pybamm.BaseModel):
         i_cc_not_zero = x_not_zero(i_cc)
 
         self.variables.update(
-            {
+            {   
+                "Change in surface open-circuit voltage [V]" : eta_ocv_surf,
                 "Change in open-circuit voltage [V]": eta_ocv,
                 "Local ECM resistance [Ohm]": pybamm.sign(i_cc)
                 * v_ecm
