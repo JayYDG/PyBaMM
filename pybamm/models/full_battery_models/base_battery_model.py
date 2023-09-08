@@ -922,9 +922,9 @@ class BaseBatteryModel(pybamm.BaseModel):
         }
         if self.options["dimensionality"] == 0:
             # 0D submesh - use base spatial method
-            base_spatial_methods[
-                "current collector"
-            ] = pybamm.ZeroDimensionalSpatialMethod()
+            base_spatial_methods["current collector"] = (
+                pybamm.ZeroDimensionalSpatialMethod()
+            )
         elif self.options["dimensionality"] == 1:
             base_spatial_methods["current collector"] = pybamm.FiniteVolume()
         elif self.options["dimensionality"] == 2:
@@ -1168,14 +1168,14 @@ class BaseBatteryModel(pybamm.BaseModel):
         self.submodels["external circuit"] = model
 
     def set_transport_efficiency_submodels(self):
-        self.submodels[
-            "electrolyte transport efficiency"
-        ] = pybamm.transport_efficiency.Bruggeman(
-            self.param, "Electrolyte", self.options
+        self.submodels["electrolyte transport efficiency"] = (
+            pybamm.transport_efficiency.Bruggeman(
+                self.param, "Electrolyte", self.options
+            )
         )
-        self.submodels[
-            "electrode transport efficiency"
-        ] = pybamm.transport_efficiency.Bruggeman(self.param, "Electrode", self.options)
+        self.submodels["electrode transport efficiency"] = (
+            pybamm.transport_efficiency.Bruggeman(self.param, "Electrode", self.options)
+        )
 
     def set_thermal_submodel(self):
         if self.options["thermal"] == "isothermal":
@@ -1353,8 +1353,14 @@ class BaseBatteryModel(pybamm.BaseModel):
                 "Battery voltage [V]": V * num_cells,
             }
         )
-
-        # Calculate equivalent resistance of an OCV-R Equivalent Circuit Model
+        # Variables for calculating the equivalent circuit model (ECM) resistance
+        # Need to compare OCV to initial value to capture this as an overpotential
+        ocv_init = self.param.ocv_init
+        eta_ocv = ocv_bulk - ocv_init
+        eta_ocv_surf = ocv_surf - ocv_init
+        # Current collector current density for working out euiqvalent resistance
+        # based on Ohm's Law
+        i_cc = self.variables["Current collector current density [A.m-2]"]
         # ECM overvoltage is OCV minus voltage
         v_ecm = ocv_bulk - V
 
@@ -1370,6 +1376,8 @@ class BaseBatteryModel(pybamm.BaseModel):
 
         self.variables.update(
             {
+                "Change in surface open-circuit voltage [V]": eta_ocv_surf,
+                "Change in open-circuit voltage [V]": eta_ocv,
                 "Local ECM resistance [Ohm]": pybamm.sign(i_cc)
                 * v_ecm
                 / (i_cc_not_zero * A_cc),
