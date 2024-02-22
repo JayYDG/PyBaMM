@@ -1377,6 +1377,7 @@ class BaseBatteryModel(pybamm.BaseModel):
         self.variables.update(
             {
                 "Change in surface open-circuit voltage [V]": eta_ocv_surf,
+                "Change in surface open-circuit voltage [V]": eta_ocv_surf,
                 "Change in open-circuit voltage [V]": eta_ocv,
                 "Local ECM resistance [Ohm]": pybamm.sign(i_cc)
                 * v_ecm
